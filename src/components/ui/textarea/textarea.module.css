@@ -20,13 +20,17 @@
   cursor: pointer;
 }
 
-/* .input:focus {
-  border: 1px solid var(--color-input-focus);
+.textarea {
+  resize: vertical;
 }
 
-.input:invalid {
-  border: 1px solid var(--color-input-invalid);
-} */
+.input:focus {
+  border: 1px solid var(--blue-color);
+}
+
+.input:invalid:focus {
+  border: 1px solid var(--red-bg-color);
+}
 
 input::placeholder {
   font-family: "Inter", sans-serif;

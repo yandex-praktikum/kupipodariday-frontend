@@ -1,81 +1,129 @@
-import React from "react";
+import { useState, useEffect, useContext } from "react";
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
-import styles from "./app.module.css";
+
+import { Header } from "../header";
+import { Footer } from "../footer";
+import { SignIn } from "../sign-in";
+import { SignUp } from "../sign-up";
+import { MainPage } from "../main-page";
+import { ProfilePage } from "../profile-page";
+import { UserPage } from "../user-page";
+import { SearchPage } from "../search-page";
+import { WishlistPage } from "../wishlist-page";
+import { GiftPage } from "../gift-page";
+import { getOwnUser } from "../../utils/api";
+import { PrivateRoute } from "../private-route";
+import { SearchBar } from "../search-bar";
+
 import { UserContext } from "../../utils/context";
-import { Input } from "../ui/input/input";
-import { Button } from "../ui/button/button";
-import { GoodCard } from "../good-card/good-card";
-import { Message } from "../ui/message/message";
-import { UserSearchCard } from "../user-search-card/user-search-card";
-import { SearchBox } from "../search-box/search-box";
-import { Header } from "../header/header";
-import { Footer } from "../footer/footer";
-import { SignIn } from "../sign-in/sign-in";
-import { SignUp } from "../sign-up/sign-up";
-import { RecoveryPassword } from "../recovery-password/recovery-password";
-import { MainPage } from "../main-page/main-page";
-import { ProfilePage } from "../profile-page/profile-page";
-import { UserPage } from "../user-page/user-page";
-import { SearchPage } from "../search-page/search-page";
-import { WishlistPage } from "../wishlist-page/wishlist-page";
-import { GiftPage } from "../gift-page/gift-page";
+
+import styles from "./app.module.css";
 
 function App() {
-  const [userState, setUserState] = React.useState({ id1: 1});
-  const [search, setSearch] = React.useState("");
+  const [userCtx, setUserCtx] = useState(null);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("auth_token")) {
+      getOwnUser().then((res) => {
+        setUserCtx(res);
+      });
+    } else {
+      setUserCtx({});
+    }
+  }, []);
 
   return (
     <div className={styles.app}>
-      <UserContext.Provider value={[userState, setUserState]}>
-        <BrowserRouter>
-          <Header />
-          <main className={styles.content}>
-            {userState.id && (
-              <SearchBox
-                search={search}
-                setSearch={setSearch}
-                extraClass={styles.search}
-              />
-            )}
-            <Switch>
-              <Route path="/signin">
-                <SignIn />
-              </Route>
-              <Route path="/signup">
-                <SignUp />
-              </Route>
-              <Route path="/recovery">
-                <RecoveryPassword />
-              </Route>
-              <Route path="/gifts">
-                <MainPage />
-              </Route>
-              <Route path="/profile">
-                <ProfilePage />
-              </Route>
-              <Route path="/users/:id">
-                <UserPage />
-              </Route>
-              <Route path="/search">
-                <SearchPage query={search} />
-              </Route>
-              <Route path="/wishlist">
-                <WishlistPage />
-              </Route>
-              <Route path="/gift/:id">
-                <GiftPage />
-              </Route>
-              <Redirect from="/" to="/gifts/line" />
-              {/* <Route path="/collection/:id">
-                <Collection />
-              </Route> */}
-            </Switch>
-          </main>
-          <Footer />
-        </BrowserRouter>
+      <UserContext.Provider value={[userCtx, setUserCtx]}>
+        <ApplicationView />
       </UserContext.Provider>
     </div>
   );
 }
+
+const ApplicationView = () => {
+  const [userCtx] = useContext(UserContext);
+  const [query, setQuery] = useState("");
+  const [queryHits, setQueryHits] = useState({
+    query: "",
+    hits: [],
+  });
+
+  const redirectTo = userCtx && userCtx.id ? "/gifts/line" : "/signin";
+
+  const changeQuery = (e) => {
+    setQuery(e.target.value);
+  };
+
+  if (!userCtx) {
+    return <></>;
+  }
+
+  return (
+    <BrowserRouter>
+      <Header />
+      <main className={styles.content}>
+        <Switch>
+          <Route path="/signin">
+            <SignIn />
+          </Route>
+          <Route path="/signup">
+            <SignUp />
+          </Route>
+          <PrivateRoute path="/search">
+            <SearchBar
+              query={query}
+              changeQuery={changeQuery}
+              setQueryHits={setQueryHits}
+            />
+            <SearchPage query={query} queryHits={queryHits} />
+          </PrivateRoute>
+          <PrivateRoute path="/gifts">
+            <SearchBar
+              query={query}
+              changeQuery={changeQuery}
+              setQueryHits={setQueryHits}
+            />
+            <MainPage />
+          </PrivateRoute>
+          <PrivateRoute path="/profile">
+            <SearchBar
+              query={query}
+              changeQuery={changeQuery}
+              setQueryHits={setQueryHits}
+            />
+            <ProfilePage />
+          </PrivateRoute>
+          <PrivateRoute path="/users/:username">
+            <SearchBar
+              query={query}
+              changeQuery={changeQuery}
+              setQueryHits={setQueryHits}
+            />
+            <UserPage />
+          </PrivateRoute>
+          <PrivateRoute path="/wishlist">
+            <SearchBar
+              query={query}
+              changeQuery={changeQuery}
+              setQueryHits={setQueryHits}
+            />
+            <WishlistPage />
+          </PrivateRoute>
+          <PrivateRoute path="/gift/:id">
+            <SearchBar
+              query={query}
+              changeQuery={changeQuery}
+              setQueryHits={setQueryHits}
+            />
+            <GiftPage />
+          </PrivateRoute>
+          <Redirect exact from="/" to={redirectTo} />
+        </Switch>
+      </main>
+      <Footer />
+    </BrowserRouter>
+  );
+};
 
 export default App;

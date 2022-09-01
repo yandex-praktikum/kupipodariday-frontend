@@ -1,22 +1,41 @@
-import React from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+
+import { ButtonReturn } from "../ui";
+import { GoodCard } from "../good-card";
+
+import {
+  getAnotherUser,
+  getAnotherUserWishes,
+  getOwnWishes,
+} from "../../utils/api";
+
+import { findOwnedIds } from "../../utils/functions";
+
 import styles from "./user-page.module.css";
-import { ButtonReturn } from "../ui/button-return/button-return";
-import { GoodCard } from "../good-card/good-card";
 
 export const UserPage = ({ extraClass = "" }) => {
-  const [userData, setUserData] = React.useState({});
-  // const [cards, setCards] = React.useState([]);
-  // const [pagData, setPagData] = React.useState({});
+  const [anotherUser, setAnotherUser] = useState({});
+  const [anotherUserWishes, setAnotherUserWishes] = useState([]);
+  const [myWishes, setMyWishes] = useState([]);
 
-  // React.useEffect(() => {
-  //   getCards(queryPage).then((res) => {
-  //     setPagData({
-  //       count: res.count,
-  //       pages: Math.ceil(res.count / 10),
-  //     });
-  //     setCards(res.results);
-  //   });
-  // }, [queryPage]);
+  const alreadyOwnWishesId = findOwnedIds(myWishes, anotherUserWishes);
+
+  const { username } = useParams();
+
+  useEffect(() => {
+    if (!username) return;
+    Promise.all([
+      getAnotherUserWishes(username),
+      getAnotherUser(username),
+      getOwnWishes(),
+    ]).then((values) => {
+      const [wishes, profileInfo, myWishes] = values;
+      setAnotherUser(profileInfo);
+      setAnotherUserWishes(wishes);
+      setMyWishes(myWishes);
+    });
+  }, [username]);
 
   return (
     <section className={`${styles.content} ${extraClass}`}>
@@ -24,50 +43,36 @@ export const UserPage = ({ extraClass = "" }) => {
       <h1
         className={`text text_type_h1 text_color_primary mb-16 ${styles.title}`}
       >
-        {`${userData.name} (${userData.login})`}
+        {`Пользователь: ${anotherUser?.username} `}
       </h1>
+
       <p
         className={`text text_type_main text_color_primary mb-16 ${styles.description}`}
       >
-        {userData.description}
+        {`Обо мне: ${anotherUser?.about || "ничего неизвестно"}`}
       </p>
-      <div className={styles.cards_box}>
-        <GoodCard
-          price={322}
-          name="5 котов и гроб"
-          current={322}
-          total={1000}
-        />
-        <GoodCard
-          price={322}
-          name="5 котов и гроб"
-          current={322}
-          total={1000}
-        />
-        <GoodCard
-          price={322}
-          name="5 котов и гроб"
-          current={322}
-          total={1000}
-        />
-        <GoodCard
-          price={322}
-          name="5 котов и гроб"
-          current={322}
-          total={1000}
-        />
-        <GoodCard
-          price={322}
-          name="5 котов и гроб"
-          current={322}
-          total={1000}
-        />
-        <GoodCard
-          price={322}
-          name="5 котов и гроб"
-          current={322}
-          total={1000}
-        />
+      <div className={styles.cards}>
+        <h2 className={`text text_type_h2 text_color_primary ${styles.title}`}>
+          Вишлист пользователя:
+        </h2>
+        <div className={styles.cards_box}>
+          {anotherUserWishes?.map(
+            ({ price, name, raised, image, link, id }) => {
+              return (
+                <GoodCard
+                  key={id}
+                  id={id}
+                  price={price}
+                  name={name}
+                  current={raised}
+                  img={image}
+                  link={link}
+                  isOwn={alreadyOwnWishesId.includes(id)}
+                />
+              );
+            }
+          )}
+        </div>
       </div>
     </section>
   );

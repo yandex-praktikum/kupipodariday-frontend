@@ -24,7 +24,7 @@
   outline: 1px solid var(--blue-color);
 }
 
-.input:invalid {
+.input:focus:invalid {
   outline: 1px solid var(--red-bg-color);
 }
 
@@ -44,16 +44,6 @@ input::placeholder {
 .eye_btn {
   position: absolute;
   top: 40px;
-  right: 8px;
-  border: none;
-  outline: none;
-  background: none;
-  cursor: pointer;
-}
-
-.add_btn {
-  position: absolute;
-  top: 12px;
   right: 8px;
   border: none;
   outline: none;

@@ -10,9 +10,9 @@
   padding: 12px 0;
 }
 
-/* .button:disabled {
+.button:disabled {
   opacity: 0.4;
-} */
+}
 
 .primary {
   background-color: var(--blue-color);
@@ -21,6 +21,11 @@
 
 .secondary {
   background-color: var(--black-color);
+  color: var(--text-secondary-color);
+}
+
+.thirdly {
+  background-color: var(--purpure-color);
   color: var(--text-secondary-color);
 }
 
@@ -34,6 +39,12 @@
 .support {
   background: none;
   border: 1px solid var(--grey-color-2);
+  color: var(--text-primary-color);
+}
+
+.tab {
+  background: none;
+  border: none;
   color: var(--text-primary-color);
 }
 

@@ -13,7 +13,7 @@
 
 .img {
   width: 601px;
-  height: 100%;
+  min-height: 100%;
   object-fit: cover;
   box-shadow: 0px 6px 20px rgba(141, 141, 141, 0.25);
   border-radius: var(--card-border-radius);
@@ -23,6 +23,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  flex-grow: 1;
   max-width: 352px;
 }
 
@@ -92,4 +93,11 @@
 
 .supported_btn {
   width: 100%;
+}
+
+.error {
+  color: red;
+  opacity: .8;
+  margin-top: 10px;
+  text-align: center;
 }

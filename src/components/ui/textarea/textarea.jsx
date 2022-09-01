@@ -1,4 +1,5 @@
 import React from "react";
+
 import styles from "./textarea.module.css";
 
 export const Textarea = ({
@@ -21,7 +22,7 @@ export const Textarea = ({
       )}
       <textarea
         id={id}
-        className={`${styles.input} text text_type_main text_color_primary ${extraInputClass}`}
+        className={`${styles.input} ${styles.textarea} text text_type_main text_color_primary ${extraInputClass}`}
         {...rest}
       />
       {error && (

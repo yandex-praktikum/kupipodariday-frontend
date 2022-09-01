@@ -64,3 +64,21 @@
   text-align: left;
   opacity: .6;
 }
+
+.error {
+  color: red;
+  opacity: .8;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.back_to_first_step {
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin-top: 10px;
+  color: blue;
+  opacity: .8;
+  text-decoration: underline;
+}

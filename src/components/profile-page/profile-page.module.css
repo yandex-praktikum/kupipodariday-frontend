@@ -15,14 +15,6 @@
   border-radius: 50%;
   margin-bottom: 32px;
   background-color: var(--grey-color-3);
-  cursor: pointer;
-}
-
-.avatar:hover {
-  opacity: .7;
-  background-image: url("../../images/icons/edit.svg");
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .img {
@@ -63,4 +55,22 @@
   box-sizing: border-box;
   color: var(--grey-color-9);
   cursor: pointer;
+}
+
+.success_message {
+  color: green;
+  opacity: .8;
+  margin-top: 10px;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.fail_message {
+  color: red;
+  opacity: .8;
+  margin-top: 10px;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 10px;
 }

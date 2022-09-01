@@ -1,66 +1,68 @@
-import React from "react";
-import { ButtonReturn } from "../ui/button-return/button-return";
-import giftImg from "../../images/gift.jpg";
-import { NavLink } from "react-router-dom";
-import { makeRightDeclension, priceArr } from "../../utils/constants";
-import { LoadingBox } from "../ui/loading-box/loading-box";
-import { Button } from "../ui/button/button";
-import { UserSupportedCard } from "../user-supported-card/user-supported-card";
+import { useState, useEffect } from "react";
+import { NavLink, useParams, useHistory } from "react-router-dom";
+
+import { Button, ButtonReturn, LoadingBox, Modal, Input } from "../ui";
+import { UserSupportedCard } from "../user-supported-card";
+
+import { priceArr } from "../../utils/constants";
+
+import { addOffer, getCard, copyWish, getOwnWishes } from "../../utils/api";
+
 import styles from "./gift-page.module.css";
-import { Modal } from "../ui/modal/modal";
-import { Input } from "../ui/input/input";
 
 export const GiftPage = ({ extraClass = "" }) => {
-  const [supportedAmountData, setSupportedAmountData] = React.useState({
-    current: 10,
-    total: 16,
-  });
-  const [isPopupOpen, setIsPopupOpen] = React.useState(false);
-  const [currentSupportedBtn, setCurrentSupportedBtn] = React.useState(100);
-  const [anotherSum, setAnotherSum] = React.useState(0);
+  const history = useHistory();
+  const { id } = useParams();
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isAddToWishDisabled, setIsAddToWishDisabled] = useState(false);
+  const [currentSupportedBtn, setCurrentSupportedBtn] = useState(100);
+  const [anotherSum, setAnotherSum] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const daysArr = ["день", "дня", "дней"];
+  const [wishData, setWishData] = useState({});
+  useEffect(() => {
+    if (sessionStorage.getItem("auth_token")) {
+      Promise.all([getCard(id), getOwnWishes()]).then(([card, wishlist]) => {
+        setWishData(card);
+        const goodInMyWish = wishlist.find((item) => item.id === card.id);
+        if (goodInMyWish) {
+          setIsAddToWishDisabled(true);
+        }
+      });
+    }
+  }, [id]);
 
-  const data = {
-    name: "Толстовка для собаки",
-    img: giftImg,
-    price: 700,
-    link: "",
-    owner: "Clara Zieme",
-    current: 320,
-    total: 1000,
-    days: 10,
-    supported: [
-      {
-        name: "Clara",
-        amount: 300,
-        date: "2 дня назад",
-      },
-      {
-        name: "Clara",
-        amount: 300,
-        date: "2 дня назад",
-      },
-      {
-        name: "Clara",
-        amount: 300,
-        date: "2 дня назад",
-      },
-      {
-        name: "Clara",
-        amount: 300,
-        date: "2 дня назад",
-      },
-      {
-        name: "Clara",
-        amount: 300,
-        date: "2 дня назад",
-      },
-    ],
-  };
+  const isRaised = wishData.raised === wishData.price;
 
   const handlePopupOpen = () => {
     setIsPopupOpen(true);
+  };
+
+  const handleSupportClick = () => {
+    errorMessage && setErrorMessage("");
+    const amount = +anotherSum || currentSupportedBtn;
+    addOffer({
+      itemId: wishData.id,
+      amount,
+      hidden: false,
+    })
+      .then(() => {
+        handlePopupClose();
+        getCard(id).then((res) => {
+          setWishData(res);
+        });
+      })
+      .catch((err) => {
+        setErrorMessage(err.message);
+      });
+  };
+
+  const handleGoToShop = () => {
+    window.open(wishData.link, "_blank");
+  };
+
+  const handleCopyClick = () => {
+    copyWish(wishData.id).then(() => history.push("/wishlist"));
   };
 
   const handlePopupClose = () => {
@@ -68,60 +70,69 @@ export const GiftPage = ({ extraClass = "" }) => {
   };
 
   const handleSupportedBtnsClick = (e) => {
-    const currentId = e.target.closest("button").getAttribute("id");
-    setCurrentSupportedBtn(+currentId);
+    const id = +e.target.closest("button").getAttribute("id");
+    setCurrentSupportedBtn(id);
+    setAnotherSum("");
   };
 
   const handleChangeInput = (e) => {
-    setAnotherSum(e.target.value);
+    const sum = e.target.value;
+    setAnotherSum(sum);
+    setCurrentSupportedBtn(+sum);
   };
 
   return (
     <section className={`${styles.content} ${extraClass}`}>
       <ButtonReturn />
-      <h1 className="text text_type_h1 mb-16">{data.name}</h1>
+      <h1 className="text text_type_h1 mb-16">{wishData.name}</h1>
       <div className={styles.data_box}>
-        <img className={styles.img} src={data.img} alt="Фото подарка." />
+        <img className={styles.img} src={wishData.image} alt="Фото подарка." />
         <div className={styles.gift_data}>
-          <h2 className="text text_type_h1 mb-16">{`${data.price} руб.`}</h2>
-          <a
-            className={`text text_type_link text_color_primary mb-4 ${styles.link}`}
-            href={data.link}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Ссылка на сайт
-          </a>
-          <p className="text text_type_main">
-            {`Добавлено ${data.days} ${makeRightDeclension(
-              data.days,
-              daysArr
-            )} назад пользователем `}
+          <h2 className="text text_type_h1 mb-16">{`${wishData.price} руб.`}</h2>
+
+          <p className="text text_type_main" style={{ maxWidth: "75%" }}>
+            {`Добавлено ${new Date(
+              wishData.createdAt
+            ).toLocaleDateString()} пользователем `}
             <NavLink
-              to="/user/1"
+              to={`/users/${wishData?.owner?.username}`}
               className={`text text_type_main text_color_primary ${styles.link}`}
             >
-              {`${data.owner} ${"\u{2197}"}`}
+              {`${wishData?.owner?.username} ${"\u{2197}"}`}
             </NavLink>
           </p>
+          <p
+            className="text text_type_main"
+            style={{ maxWidth: "75%" }}
+          >{`Описание: ${wishData.description}`}</p>
           <LoadingBox
-            current={data.current}
-            total={data.total}
+            current={wishData.raised}
+            total={wishData.price}
             extraClass={styles.load}
           />
           <div className={styles.btns_box}>
+            <Button
+              type="support"
+              kind="thirdly"
+              text="Перейти в магазин"
+              extraClass={styles.btn}
+              onClick={handleGoToShop}
+            />
             <Button
               type="button"
               kind="secondary"
               text="Поддержать"
               extraClass={styles.btn}
               onClick={handlePopupOpen}
+              disabled={isRaised}
             />
             <Button
               type="button"
               kind="support"
               text="Добавить в вишлист"
               extraClass={styles.btn}
+              onClick={handleCopyClick}
+              disabled={isAddToWishDisabled}
             />
           </div>
         </div>
@@ -129,22 +140,16 @@ export const GiftPage = ({ extraClass = "" }) => {
       <div className={styles.supported_box}>
         <div className={styles.subtitle_box}>
           <h2 className="text text_ty-e_h2">Список поддержавших</h2>
-          <p className="text text_type_main">{`${supportedAmountData.current} из ${supportedAmountData.total} отображается`}</p>
         </div>
-        <UserSupportedCard name="Clara Zieme" amount={300} date="2 дня назад" />
-        <UserSupportedCard name="Clara Zieme" amount={300} date="2 дня назад" />
-        <UserSupportedCard name="Clara Zieme" amount={300} date="2 дня назад" />
-        <UserSupportedCard name="Clara Zieme" amount={300} date="2 дня назад" />
-        <UserSupportedCard name="Clara Zieme" amount={300} date="2 дня назад" />
-        <UserSupportedCard name="Clara Zieme" amount={300} date="2 дня назад" />
-        <UserSupportedCard name="Clara Zieme" amount={300} date="2 дня назад" />
+        {wishData?.offers?.length ? (
+          wishData?.offers?.map(({ name, amount, createdAt }) => (
+            <UserSupportedCard name={name} amount={amount} date={createdAt} />
+          ))
+        ) : (
+          <p>Пока никого нет</p>
+        )}
       </div>
-      <Button
-        type="button"
-        extraClass={styles.load_btn}
-        text="Загрузить ещё"
-        kind="secondary"
-      />
+
       {isPopupOpen && (
         <Modal
           onClose={handlePopupClose}
@@ -163,7 +168,8 @@ export const GiftPage = ({ extraClass = "" }) => {
                     extraClass={styles.price_btn}
                     text={`${item} руб`}
                     kind={
-                      currentSupportedBtn === item && !anotherSum
+                      currentSupportedBtn === item ||
+                      currentSupportedBtn === anotherSum
                         ? "primary"
                         : "support"
                     }
@@ -174,7 +180,8 @@ export const GiftPage = ({ extraClass = "" }) => {
               <Input
                 type="number"
                 extraInputClass={styles.price_input}
-                placeholder="Другая сумма"
+                placeholder="Сумма"
+                value={anotherSum}
                 onChange={handleChangeInput}
               />
             </div>
@@ -182,13 +189,12 @@ export const GiftPage = ({ extraClass = "" }) => {
               type="button"
               kind="secondary"
               text="Поддержать"
+              onClick={handleSupportClick}
               extraClass={styles.supported_btn}
             />
-            <p className="text text_type_small mt-8">
-              Нажимая кнопку “Поддержать” вы соглашаетесь с условиями оферты,
-              политики в отношении обработки и защиты персональных данных и
-              даете согласие на обработку своих персональных данных
-            </p>
+            {errorMessage && (
+              <span className={styles.error}>{errorMessage}</span>
+            )}
           </div>
         </Modal>
       )}

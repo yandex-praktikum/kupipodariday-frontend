@@ -1,52 +1,29 @@
-import React from "react";
-import styles from "./wishlist-page.module.css";
-import { GoodCard } from "../good-card/good-card";
+import { useState, useEffect } from "react";
+
+import { GoodCard } from "../good-card";
+
+import { Modal, Button } from "../ui";
+
 import cancelIcon from "../../images/icons/cancel.svg";
 import trashIcon from "../../images/icons/trash-red.svg";
-import { Modal } from "../ui/modal/modal";
-import { Button } from "../ui/button/button";
+
+import { getOwnWishes, removeWish } from "../../utils/api";
+
+import styles from "./wishlist-page.module.css";
 
 export const WishlistPage = ({ extraClass = "" }) => {
-  const [currentCardsId, setCurrentCardsId] = React.useState([]);
-  const [isPopupOpen, setIsPopupOpen] = React.useState(false);
+  const [currentCardsId, setCurrentCardsId] = useState([]);
+  const [data, setOwnWishes] = useState([]);
 
-  const data = [
-    {
-      id: 1,
-      price: 490,
-      name: "Футболка",
-      current: 369,
-      total: 900,
-    },
-    {
-      id: 2,
-      price: 490,
-      name: "Футболка",
-      current: 369,
-      total: 900,
-    },
-    {
-      id: 3,
-      price: 490,
-      name: "Футболка",
-      current: 369,
-      total: 900,
-    },
-    {
-      id: 4,
-      price: 490,
-      name: "Футболка",
-      current: 369,
-      total: 900,
-    },
-    {
-      id: 5,
-      price: 490,
-      name: "Футболка",
-      current: 369,
-      total: 900,
-    },
-  ];
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("auth_token")) {
+      getOwnWishes().then((res) => {
+        setOwnWishes(res);
+      });
+    }
+  }, []);
 
   const handlePopupOpen = () => {
     setIsPopupOpen(true);
@@ -73,7 +50,15 @@ export const WishlistPage = ({ extraClass = "" }) => {
     setCurrentCardsId([]);
   };
 
-  const handleRemoveCards = () => {};
+  const handleRemoveCards = () => {
+    Promise.all(currentCardsId.map((id) => removeWish(id).catch())).then(() => {
+      getOwnWishes().then((res) => {
+        setCurrentCardsId([]);
+        setOwnWishes(res);
+        handlePopupClose();
+      });
+    });
+  };
 
   return (
     <section className={`${styles.content} ${extraClass}`}>
@@ -120,6 +105,7 @@ export const WishlistPage = ({ extraClass = "" }) => {
                       type="button"
                       extraClass={styles.popup_btn}
                       kind="secondary"
+                      onClick={handleRemoveCards}
                       text="Удалить"
                     />
                   </div>
@@ -132,20 +118,20 @@ export const WishlistPage = ({ extraClass = "" }) => {
         ""
       )}
       <div className={styles.cards_box}>
-        {data.map((item) => {
+        {data.map(({ id, price, image, name, raised }) => {
           let withBorder = false;
-          if (currentCardsId.indexOf(item.id) !== -1) {
+          if (currentCardsId.indexOf(id) !== -1) {
             withBorder = true;
           }
           return (
             <GoodCard
-              key={item.id}
-              id={item.id}
+              key={id}
+              id={id}
               onClick={onCardClick}
-              price={item.price}
-              name={item.name}
-              current={item.current}
-              total={item.total}
+              price={price}
+              img={image}
+              name={name}
+              current={raised}
               extraClass={withBorder ? styles.border : ""}
             />
           );

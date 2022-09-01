@@ -1,4 +1,5 @@
 import React from "react";
+
 import styles from "./message.module.css";
 
 export const Message = ({ text = "", extraClass = "", isError = false }) => {

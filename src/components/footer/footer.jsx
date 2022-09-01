@@ -1,7 +1,9 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
-import styles from "./footer.module.css";
+
 import logoIcon from "../../images/icons/logo-mini.svg";
+
+import styles from "./footer.module.css";
 
 export const Footer = ({ extraClass = "" }) => {
   const location = useLocation();

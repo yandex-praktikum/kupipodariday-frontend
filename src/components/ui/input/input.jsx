@@ -1,7 +1,9 @@
-import React from "react";
-import styles from "./input.module.css";
+import { useState } from "react";
+
 import eyeIcon from "../../../images/icons/preview.svg";
 import eyeOffIcon from "../../../images/icons/no-preview.svg";
+
+import styles from "./input.module.css";
 
 export const Input = ({
   extraClass = "",
@@ -12,7 +14,7 @@ export const Input = ({
   label,
   ...rest
 }) => {
-  const [passwordOpen, setPasswordOpen] = React.useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const customType =
     type === "password" ? (passwordOpen ? "text" : "password") : type;
   const passwordIcon = customType === "password" ? eyeOffIcon : eyeIcon;

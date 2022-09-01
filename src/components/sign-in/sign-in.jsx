@@ -1,17 +1,32 @@
-import React from "react";
-import { useHistory } from "react-router-dom";
-import styles from "./sign-in.module.css";
-import { Input } from "../ui/input/input";
-import { NavLink } from "react-router-dom";
-import { getUser, loginUser } from "../../utils/api";
+import { useState, useContext } from "react";
+import { NavLink, useHistory } from "react-router-dom";
+
+import { Input, Button } from "../ui";
+
+import { getOwnUser, loginUser } from "../../utils/api";
+
 import { UserContext } from "../../utils/context";
-import { Button } from "../ui/button/button";
+
+import {
+  MINIMUM_USERNAME_LENGTH,
+  MINIMUM_PASSWORD_LENGTH,
+} from "../../utils/constants";
+
+import styles from "./sign-in.module.css";
 
 export const SignIn = ({ extraClass = "" }) => {
-  const [userData, setUserData] = React.useState({});
-  const [user, setUser] = React.useContext(UserContext);
+  const [_userCtx, setUserCtx] = useContext(UserContext);
+  const [userData, setUserData] = useState({
+    username: "",
+    password: "",
+  });
+  const [errorMessage, setErrorMessage] = useState("");
 
   const history = useHistory();
+
+  const usernameValid = userData.username.length >= MINIMUM_USERNAME_LENGTH;
+  const passwordValid = userData.password.length >= MINIMUM_PASSWORD_LENGTH;
+  const submitDisabled = !usernameValid || !passwordValid;
 
   const onChangeInput = (e) => {
     setUserData({
@@ -20,17 +35,19 @@ export const SignIn = ({ extraClass = "" }) => {
     });
   };
 
-  const handleSubmit = () => {
-    loginUser(userData.username, userData.password).then((res) => {
-      if (res && res.auth_token) {
-        getUser().then((res) => {
-          if (res && res.id) {
-            setUserData({ id: res.id });
-            history.replace({ pathname: "/" });
-          }
-        });
+  const authorizeUser = async (event) => {
+    event.preventDefault();
+    errorMessage && setErrorMessage("");
+    try {
+      const response = await loginUser(userData.username, userData.password);
+      if (response && response.access_token) {
+        const user = await getOwnUser();
+        setUserCtx(user);
+        history.replace({ pathname: "/gifts/line" });
       }
-    });
+    } catch (err) {
+      setErrorMessage(err.message);
+    }
   };
 
   return (
@@ -40,29 +57,35 @@ export const SignIn = ({ extraClass = "" }) => {
       >
         Вход
       </h2>
-      <form className={styles.form}>
+      <form className={styles.form} onSubmit={authorizeUser}>
         <Input
-          name="email"
-          type="email"
+          name={"username"}
+          type="text"
           id={1}
-          placeholder="Введите тут"
-          label="E-mail"
+          placeholder="Введите имя пользователя"
+          label="Юзернейм"
           onChange={onChangeInput}
           extraClass="mb-16"
+          minLength={MINIMUM_USERNAME_LENGTH}
+          required={true}
         />
         <Input
-          name="password"
+          name={"password"}
           type="password"
           id={2}
           placeholder="Введите пароль"
           label="Пароль"
           onChange={onChangeInput}
+          minLength={MINIMUM_PASSWORD_LENGTH}
+          required={true}
         />
+        {errorMessage && <span className={styles.error}>{errorMessage}</span>}
         <Button
-          type="button"
+          type="submit"
           kind="secondary"
           text="Войти"
           extraClass={styles.btn}
+          disabled={submitDisabled}
         />
       </form>
       <div className={styles.links_box}>
@@ -76,17 +99,6 @@ export const SignIn = ({ extraClass = "" }) => {
           className={`text text_type_button text_color_primary ${styles.nav}`}
         >
           Зарегистрироваться
-        </NavLink>
-      </div>
-      <div className={styles.links_box}>
-        <p className={`text text_type_main text_color_primary ${styles.text}`}>
-          Забыли пароль?
-        </p>
-        <NavLink
-          to="/recovery"
-          className={`text text_type_button text_color_primary ${styles.nav}`}
-        >
-          Восстановить пароль
         </NavLink>
       </div>
     </div>

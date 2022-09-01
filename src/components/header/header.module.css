@@ -19,6 +19,11 @@
   outline: none;
   background: none;
   cursor: pointer;
+  height: 100%;
+}
+
+.nav_inactive {
+  border-bottom: 2px solid var(--text-primary-color);
 }
 
 .nav_box {

@@ -10,6 +10,14 @@
   text-align: left;
 }
 
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 126px;
+}
+
 .cards_box {
   display: flex;
   gap: 32px;
