@@ -32,6 +32,8 @@ export const Collection = ({ extraClass = "" }) => {
           {data.items?.map((card) => {
             return (
               <GoodCard
+                id={card.id}
+                isOwn={user.id === data.owner.id}
                 key={card.id}
                 isLogin={!!user.id}
                 price={card.price}
